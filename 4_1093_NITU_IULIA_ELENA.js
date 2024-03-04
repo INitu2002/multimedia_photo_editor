@@ -1,0 +1,252 @@
+/*const visibleCanvas = document.getElementById("visibleCanvas");
+    var originalImage = null;
+
+    const fileBrowser = document.getElementById("fileBrowser");
+    document.getElementById("fileBrowser").addEventListener('change', function(e) {
+        const files = e.target.files;
+        if(files.length > 0) {
+            const file = files[0];
+
+            const reader = new FileReader();
+            reader.addEventListener('load', (ev) => {
+                const dataUrl = reader.result;
+
+                const img = document.createElement('img');
+                originalImage = img;
+                img.addEventListener('load', function() {
+                    const visibleCanvas = document.getElementById('visibleCanvas');
+                    visibleCanvas.width = img.naturalWidth;
+                    visibleCanvas.height = img.naturalHeight;
+                    const visibleCanvasContext = visibleCanvas.getContext('2d');
+                    visibleCanvasContext.drawImage(img, 0, 0);
+                });
+                img.src = dataUrl;
+            });
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById("btnDescarcaImaginea").addEventListener('click', function() {
+        const imageDataUrl = visibleCanvas.toDataURL();
+
+        const downloadLink = document.createElement('a');
+        downloadLink.href = imageDataUrl;
+        downloadLink.download = 'imagine_salvata.png';
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    });
+
+    // ------------------------- SELECTIE IMAGINE ---------------------------
+
+    const btnSelectEvInImage = document.getElementById("selectEverythingInImage");
+    const ctx = visibleCanvas.getContext("2d");
+    let x0=0, y0=0, x1=0, y1=0;
+    let isSelecting = false;
+
+    btnSelectEvInImage.addEventListener("click", function() {
+        isSelecting = true;
+    });
+
+    visibleCanvas.addEventListener('mousemove', function (e) {
+        if (isSelecting) {
+            x1 = e.clientX - visibleCanvas.getBoundingClientRect().left;
+            y1 = e.clientY - visibleCanvas.getBoundingClientRect().top;
+
+            deseneazaSelectieTotala(x0, y0, x1, y1);
+        }
+    });
+
+    visibleCanvas.addEventListener('mouseup', function () {
+        if (isSelecting) {
+            isSelecting = false;
+        }
+    });
+
+    // ------------------------- MODIFICARE SELECTIE IMAGINE ---------------------------
+    var miscareMouse = false;
+    var startX, startY;
+    var selectieCanvas = { x: 0, y: 0, width: 0, height: 0 };
+
+    visibleCanvas.addEventListener('mousedown', function (e) {
+        miscareMouse = true;
+        startX = e.clientX - visibleCanvas.getBoundingClientRect().left;
+        startY = e.clientY - visibleCanvas.getBoundingClientRect().top;
+
+        selectieCanvas.x = x0;
+        selectieCanvas.y = y0;
+        selectieCanvas.width = x1 - x0;
+        selectieCanvas.height = y1 - y0;
+    });
+
+    visibleCanvas.addEventListener('mousemove', function (e) {
+        if (miscareMouse) {
+            var endX = e.clientX - visibleCanvas.getBoundingClientRect().left;
+            var endY = e.clientY - visibleCanvas.getBoundingClientRect().top;
+
+            deseneazaSelectieTotala(startX, startY, endX, endY);
+        }
+    });
+
+    visibleCanvas.addEventListener('mouseup', function () {
+        miscareMouse = false;
+    });
+
+    var btnTurnToInitialImage = document.getElementById("turnToInitialImage");
+    btnturnToInitialImage.addEventListener('click', function(e) {
+        ctx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
+        ctx.drawImage(originalImage, 0, 0);
+    });
+
+    var btnSelectToataImaginea = document.getElementById("btnSelecteazaToataImaginea");
+    btnSelectToataImaginea.addEventListener('click', function(e) {
+        x0 = 0;
+        y0 = 0;
+        x1 = visibleCanvas.width;
+        y1 = visibleCanvas.height;
+
+        deseneazaSelectieTotala(x0, y0, x1, y1);
+    });
+
+    var btnCrop = document.getElementById("btnCropImagine");
+    btnCrop.addEventListener('click', function(e) {
+        cropImage();
+    });
+
+    function deseneazaSelectieTotala(startX, startY, endX, endY) {
+        const xmin = Math.min(startX, endX);
+        const ymin = Math.min(startY, endY);
+        const xmax = Math.min(visibleCanvas.width, endX);
+        const ymax = Math.min(visibleCanvas.height, endY);
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = visibleCanvas.width;
+        tempCanvas.height = visibleCanvas.height;
+        const contextTemporar = tempCanvas.getContext('2d');
+
+        contextTemporar.drawImage(originalImage, 0, 0);
+
+        contextTemporar.fillStyle = "transparent";
+        contextTemporar.fillRect(xmin, ymin, xmax - xmin, ymax - ymin);
+        contextTemporar.strokeStyle = "red";
+        contextTemporar.lineWidth = 4;
+        contextTemporar.strokeRect(xmin, ymin, maxX - xmin, ymax - ymin);
+
+        ctx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
+        ctx.drawImage(tempCanvas, 0, 0);
+
+        x0 = xmin;
+        y0 = ymin;
+        x1 = xmax;
+        y1 = ymax;
+    }
+
+    function cropImage() {
+        const canvasMicsorat = document.createElement('canvas');
+        const croppedCtx = canvasMicsorat.getContext('2d');
+
+        canvasMicsorat.width = x1 - x0;
+        canvasMicsorat.height = y1 - y0;
+        croppedCtx.drawImage(originalImage, x0, y0, x1 - x0, y1 - y0, 0, 0, x1 - x0, y1 - y0);
+
+        ctx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
+        ctx.drawImage(canvasMicsorat, 0, 0);
+
+        x0 = 0;
+        y0 = 0;
+        x1 = 0;
+        y1 = 0;
+    }
+
+    const btnScale = document.getElementById("scaleButton");
+
+    // ------------------------- ADAUGARE TEXT PE IMAGINE ---------------------------
+
+    function addText() {
+    const canvasVizibil = document.getElementById("visibleCanvas");
+    const ctx = canvasVizibil.getContext("2d");
+
+    const text = document.getElementById("introduTextul").value;
+
+    const size = parseInt(document.getElementById("introduDim").value);
+
+    const align = document.getElementById("alignInput").value;
+
+    const textColor = document.getElementById("introduCuloarea").value;
+
+    ctx.font = size + "px arial";
+
+    let x, y;
+    switch (align) {
+        case "center":
+            x = (canvasVizibil.width - ctx.measureText(text).width) / 2;
+            y = (canvasVizibil.height - size) / 2;
+            break;
+        case "left":
+            x = 0;
+            y = (canvasVizibil.height - size) / 2;
+            break;
+        case "right":
+            x = canvasVizibil.width - ctx.measureText(text).width;
+            y = (canvasVizibil.height - size) / 2;
+            break;
+        case "bottom-left":
+            x = 0;
+            y = canvasVizibil.height - size;
+            break;
+        case "bottom-right":
+            x = canvasVizibil.width - ctx.measureText(text).width;
+            y = canvasVizibil.height - size;
+            break;
+        case "top-left":
+            x = 0;
+            y = size;
+            break;
+        case "top-right":
+            x = canvasVizibil.width - ctx.measureText(text).width;
+            y = size;
+            break;
+        case "center-top":
+            x = (canvasVizibil.width - ctx.measureText(text).width) / 2;
+            y = size;
+            break;
+        case "center-bottom":
+            x = (canvasVizibil.width - ctx.measureText(text).width) / 2;
+            y = canvasVizibil.height - size;
+            break;
+        default:
+            break;
+    }
+
+    ctx.fillStyle = textColor;
+    ctx.fillText(text, x, y);
+}
+
+    const btnAdaugaText = document.getElementById("btnAdaugaTextPeImagine");
+
+    setTimeout(() => {
+        btnAdaugaText.addEventListener('click', addText);
+    }, 0);
+
+    function clearSelection() {
+    if (x0 !== 0 || y0 !== 0 || x1 !== 0 || y1 !== 0) {
+        if (!originalImage.complete) {
+            alert("Imaginea nu a fost încărcată complet. Așteptați până când imaginea este complet încărcată.");
+            return;
+        }
+
+        // Fac selectia alba -> o sterg
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+
+        alert(`Punctele din colturile selecției sunt:
+        x0: ${x0}
+        y0: ${y0}
+        x1: ${x1}
+        y1: ${y1}`);
+    }
+}
+
+    const btnMakeWhiteSelection = document.getElementById("makeWhiteSelectionButton");
+    btnMakeWhiteSelection.addEventListener('click', clearSelection);*/
